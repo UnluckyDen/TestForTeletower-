@@ -33,6 +33,7 @@
 
 # Visual Studio cache directory
 .vs/
+.idea/
 
 # Gradle cache directory
 .gradle/
@@ -81,7 +82,8 @@ InitTestScene*.unity*
 
 # Addressables default ignores, before user customizations
 /ServerData
-/[Aa]ssets/StreamingAssets/aa*
+/[Aa]ssets/[Ss]treamingAssets/aa.meta
+/[Aa]ssets/[Ss]treamingAssets/aa/*
 /[Aa]ssets/AddressableAssetsData/link.xml*
 /[Aa]ssets/Addressables_Temp*
 # By default, Addressables content builds will generate addressables_content_state.bin
@@ -97,3 +99,14 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# Spot
+crashlytics-build.properties
+UserSettings/Layouts/CurrentMaximizeLayout.dwlt
+Assets/_Main/.DS_Store
+UserSettings/AndroidLogcatSettings.asset
+Assets/_Main/Resources/.DS_Store
+/UserSettings/Layouts
+UserSettings/Layouts/default-2022.dwlt
+UserSettings/Layouts/default-2022.dwlt
+.DS_Store
