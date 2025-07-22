@@ -1,6 +1,7 @@
 using Unity.Netcode;
 using UnityEngine;
 using System.Collections.Generic;
+using _Main.Scripts.Map;
 using _Main.Scripts.Settings;
 using _Main.Scripts.Units;
 using _Main.Scripts.Units.Navigation;
@@ -9,9 +10,11 @@ namespace _Main.Scripts.Match
 {
     public class MatchBootstrapper : NetworkBehaviour
     {
-        [SerializeField] private MatchController _matchController;
+        [SerializeField] private MapGenerator _mapGenerator;
         [SerializeField] private NavMeshBaker _navMeshBaker;
         [SerializeField] private UnitSpawner _unitSpawner;
+        
+        [SerializeField] private MatchController _matchController;
         
         [SerializeField] private Transform[] _spawnPointsPlayer1;
         [SerializeField] private Transform[] _spawnPointsPlayer2;
@@ -41,6 +44,8 @@ namespace _Main.Scripts.Match
         {
             ulong player1Id = _connectedClients[0];
             ulong player2Id = _connectedClients[1];
+            
+            _mapGenerator.GenerateMapClientRpc(NetworkManager.Singleton.ServerTime.Tick);
 
             SpawnUnitsForPlayer(player1Id, _spawnPointsPlayer1, PlayerSide.Side1);
             SpawnUnitsForPlayer(player2Id, _spawnPointsPlayer2, PlayerSide.Side2);
