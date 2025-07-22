@@ -1,3 +1,4 @@
+using System;
 using _Main.Scripts.Infrastructure.Interfaces;
 using _Main.Scripts.Settings;
 using _Main.Scripts.Units.StateMachine;
@@ -19,17 +20,13 @@ namespace _Main.Scripts.Units
         [SerializeField] private NavMeshAgent _navMeshAgent;
         
         private UnitStateMachine _unitStateMachine;
+        
+        public PlayerSide PlayerSide { get; private set; }
 
         private void Awake()
         {
             HoverExit();
             Deselect();
-        }
-        
-        public override void OnNetworkSpawn()
-        {
-            if (IsServer)
-                UnitRegistry.Instance.AddUnit(this);
         }
 
         public override void OnNetworkDespawn()
@@ -61,9 +58,11 @@ namespace _Main.Scripts.Units
             _selectedGameObject.SetActive(false);
 
         [ClientRpc]
-        public void UpdateMaterialClientRpc(PlayerSide playerSide)
-        {
+        public void UpdatePlayerSideClientRpc(PlayerSide playerSide) =>
+            PlayerSide = playerSide;
+
+        [ClientRpc]
+        public void UpdateMaterialClientRpc(PlayerSide playerSide) =>
             _meshRenderer.material = _unitSettings.SideMaterials[playerSide];
-        }
     }
 }
