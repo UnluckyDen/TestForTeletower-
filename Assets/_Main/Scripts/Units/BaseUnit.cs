@@ -1,7 +1,5 @@
-using System;
 using _Main.Scripts.Infrastructure.Interfaces;
 using _Main.Scripts.Settings;
-using _Main.Scripts.Units.StateMachine;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
@@ -10,7 +8,7 @@ namespace _Main.Scripts.Units
 {
     public class BaseUnit : NetworkBehaviour, IHoverable, ISelectable
     {
-        [SerializeField] private UnitSettings _unitSettings;
+        [SerializeField] private SideSettings _unitSettings;
         
         [SerializeField] private GameObject _hoveredGameObject;
         [SerializeField] private GameObject _selectedGameObject;
@@ -19,7 +17,8 @@ namespace _Main.Scripts.Units
         [Space]
         [SerializeField] private NavMeshAgent _navMeshAgent;
         
-        private UnitStateMachine _unitStateMachine;
+        public bool IsMoving => _navMeshAgent.hasPath 
+                                && _navMeshAgent.remainingDistance > _navMeshAgent.stoppingDistance;
         
         public PlayerSide PlayerSide { get; private set; }
 
@@ -35,16 +34,16 @@ namespace _Main.Scripts.Units
                 UnitRegistry.Instance.RemoveUnit(this);
         }
 
-        public void Init()
-        {
-            _unitStateMachine = new UnitStateMachine();
-        }
-
-        public void SetTarget(Vector3 target)
+        public void SetTargetPoint(Vector3 target)
         {
             _navMeshAgent.SetDestination(target);
         }
 
+        public void SetAttackUnit(BaseUnit unitToAttack)
+        {
+            
+        }
+        
         public void HoverEnter() => 
             _hoveredGameObject.SetActive(true);
 

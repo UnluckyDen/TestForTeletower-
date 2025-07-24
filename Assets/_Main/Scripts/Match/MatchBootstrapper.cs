@@ -18,9 +18,7 @@ namespace _Main.Scripts.Match
         
         [SerializeField] private Transform[] _spawnPointsPlayer1;
         [SerializeField] private Transform[] _spawnPointsPlayer2;
-
-        private readonly List<BaseUnit> _allUnits = new();
-
+        
         private readonly List<ulong> _connectedClients = new();
 
         public override void OnNetworkSpawn() =>
@@ -44,25 +42,29 @@ namespace _Main.Scripts.Match
         {
             ulong player1Id = _connectedClients[0];
             ulong player2Id = _connectedClients[1];
-            
-            _mapGenerator.GenerateMapClientRpc(NetworkManager.Singleton.ServerTime.Tick);
 
-            SpawnUnitsForPlayer(player1Id, _spawnPointsPlayer1, PlayerSide.Side1);
-            SpawnUnitsForPlayer(player2Id, _spawnPointsPlayer2, PlayerSide.Side2);
+            int seed = NetworkManager.Singleton.ServerTime.Tick;
+            _mapGenerator.GenerateMapClientRpc(seed);
+
+            List<ulong> unitsSide1 = SpawnUnitsForPlayer(_spawnPointsPlayer1, PlayerSide.Side1);
+            List<ulong> unitsSide2 = SpawnUnitsForPlayer(_spawnPointsPlayer2, PlayerSide.Side2);
             
             _navMeshBaker.Bake();
 
-            _matchController.InitializeMatch(_allUnits, player1Id, player2Id);
+            _matchController.InitializeMatchClientRpc(player1Id, player2Id, unitsSide1.ToArray(), unitsSide2.ToArray(), seed);
         }
 
-        private void SpawnUnitsForPlayer(ulong ownerClientId, Transform[] spawnPoints, PlayerSide side)
+        private List<ulong> SpawnUnitsForPlayer(Transform[] spawnPoints, PlayerSide side)
         {
+            List<ulong> spawnedUnits = new List<ulong>();
             foreach (var point in spawnPoints)
             {
                 BaseUnit unit = _unitSpawner.SpawnUnit(side, point.position, point.eulerAngles);
 
-                _allUnits.Add(unit);
+                spawnedUnits.Add(unit.NetworkObjectId);
             }
+            
+            return spawnedUnits;
         }
     }
 }

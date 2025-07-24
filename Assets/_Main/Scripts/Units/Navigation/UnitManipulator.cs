@@ -1,15 +1,18 @@
+using System;
 using _Main.Scripts.Infrastructure;
+using _Main.Scripts.Match;
+using _Main.Scripts.Units.UnitCommands;
 using Unity.Netcode;
 using UnityEngine;
 
 namespace _Main.Scripts.Units.Navigation
 {
-    public class UnitManipulator : NetworkBehaviour
+    public class UnitManipulator : MonoBehaviour
     {
+        public event Action<UnitCommandData> UnitCommandGiven;
+        
         [SerializeField] private ObjectSelector _objectSelector;
-        
         [SerializeField] private Camera _mainCamera;
-        
         [SerializeField] private LayerMask _groundLayerMask;
         
         private readonly RaycastHit[] _raycastHits = new RaycastHit[1];
@@ -19,18 +22,19 @@ namespace _Main.Scripts.Units.Navigation
 
         private void Update()
         {
-            if (!IsOwner)
-                return;
-            
             if (!Input.GetMouseButtonDown(1))
                 return;
             
             if (_objectSelector.SelectedObject is not BaseUnit unit)
                 return;
             
+            if (!MatchController.Instance.CanUseUnit(NetworkManager.Singleton.LocalClientId, unit.NetworkObjectId))
+                return;
+            
             Ray ray = _mainCamera.ScreenPointToRay(Input.mousePosition);
 
             int hitCount = Physics.RaycastNonAlloc(ray, _raycastHits, 100f, _groundLayerMask);
+            
 
             if (hitCount > 0)
                 SetPathToUnit(unit, _raycastHits[0].point);
@@ -38,21 +42,11 @@ namespace _Main.Scripts.Units.Navigation
 
         private void SetPathToUnit(BaseUnit unit, Vector3 position)
         {
-            ulong networkObjectId = unit.NetworkObject.NetworkObjectId;
-            SetTargetToUnitServerRpc(networkObjectId, position);
-        }
-
-        [ServerRpc]
-        private void SetTargetToUnitServerRpc(ulong unitId, Vector3 position)
-        {
-            if (UnitRegistry.Instance.TryGetUnit(unitId, out BaseUnit unit))
-            {
-                unit.SetTarget(position);
-            }
-            else
-            {
-                Debug.LogWarning($"[Server] Unit {unitId} не найден в UnitRegistry");
-            }
+            UnitCommandGiven?.Invoke(new UnitCommandData(
+                UnitCommandType.MoveCommand,
+                unit.NetworkObjectId,
+                position,
+                0));
         }
     }
 }

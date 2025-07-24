@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a528e953b6a54275941cb6c40d01c458, type: 3}
-  m_Name: UnitSettings
+  m_Name: SideSettings
   m_EditorClassIdentifier: 
   SideMaterials:
     _serializedList:
@@ -18,3 +18,15 @@ MonoBehaviour:
       Value: {fileID: 2100000, guid: 90426594059bb454d9621a18bcab836e, type: 2}
     - Key: 2
       Value: {fileID: 2100000, guid: a012fea0eaf764800bf4ea317145ee93, type: 2}
+  SideCollors:
+    _serializedList:
+    - Key: 1
+      Value: {r: 0, g: 0, b: 1, a: 1}
+    - Key: 2
+      Value: {r: 1, g: 0, b: 0, a: 1}
+  SideNames:
+    _serializedList:
+    - Key: 1
+      Value: Blue Side
+    - Key: 2
+      Value: Red Side
