@@ -42,6 +42,7 @@ namespace _Main.Scripts.Units.Navigation
 
         private void SetPathToUnit(BaseUnit unit, Vector3 position)
         {
+            // unit.DrawPath(position);
             UnitCommandGiven?.Invoke(new UnitCommandData(
                 UnitCommandType.MoveCommand,
                 unit.NetworkObjectId,
