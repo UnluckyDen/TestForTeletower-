@@ -71,7 +71,17 @@ namespace _Main.Scripts.Match
                 _roundController.TurnEnded -= StartNewTurnClientRpc;
             }
         }
-        
+
+        public bool CanUseUnit(ulong playerId, ulong unitId)
+        {
+            PlayerSide turnSide = MatchModel.CurrentSide;
+            PlayerSide playerSide = MatchModel.GetPlayerSide(playerId);
+            PlayerSide unitSide = _matchUnitsModel.GetUnitSide(unitId);
+            
+            return (playerSide == unitSide) 
+                   && (playerSide == turnSide);
+        }
+
         [ClientRpc]
         private void StartNewTurnClientRpc()
         {
@@ -87,7 +97,7 @@ namespace _Main.Scripts.Match
 
             _roundController.StartRound();
         }
-        
+
         [ServerRpc(RequireOwnership = false)]
         public void SendUnitCommandServerRpc(UnitCommandData commandData)
         {
@@ -99,17 +109,6 @@ namespace _Main.Scripts.Match
         {
             yield return unitCommand.Execute();
             StartNewTurnClientRpc();
-        }
-
-
-        public bool CanUseUnit(ulong playerId, ulong unitId)
-        {
-            PlayerSide turnSide = MatchModel.CurrentSide;
-            PlayerSide playerSide = MatchModel.GetPlayerSide(playerId);
-            PlayerSide unitSide = _matchUnitsModel.GetUnitSide(unitId);
-            
-            return (playerSide == unitSide) 
-                   && (playerSide == turnSide);
         }
     }
 }

@@ -36,5 +36,8 @@ namespace _Main.Scripts.Match
         
         public PlayerSide GetUnitSide(ulong baseUnit) =>
             _sidesByUnits.GetValueOrDefault(baseUnit);
+        
+        public List<ulong> GetAllUnitsBySide(PlayerSide side) =>
+            _unitListBySides.GetValueOrDefault(side);
     }
 }

@@ -14,7 +14,6 @@ namespace _Main.Scripts.Units
             baseUnit.NetworkObject.Spawn();
             baseUnit.UpdatePlayerSideClientRpc(playerSide);
             baseUnit.UpdateMaterialClientRpc(playerSide);
-            UnitRegistry.Instance.AddUnit(baseUnit);
 
             return baseUnit;
         }

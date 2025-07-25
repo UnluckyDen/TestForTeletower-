@@ -10,19 +10,20 @@ namespace _Main.Scripts.Units
     {
         [SerializeField] private SideSettings _unitSettings;
         [SerializeField] private float _unitSpeed;
-        
+
         [SerializeField] private GameObject _hoveredGameObject;
         [SerializeField] private GameObject _selectedGameObject;
         [SerializeField] private MeshRenderer _meshRenderer;
 
         [Space]
         [SerializeField] private NavMeshAgent _navMeshAgent;
+        [SerializeField] private NavMeshObstacle _navMeshObstacle;
 
         [SerializeField] private UnitPathPredictor _unitPathPredictor;
-        
-        public bool IsMoving => _navMeshAgent.hasPath 
+
+        public bool IsMoving => _navMeshAgent.hasPath
                                 && _navMeshAgent.remainingDistance > _navMeshAgent.stoppingDistance;
-        
+
         public PlayerSide PlayerSide { get; private set; }
 
         private void Awake()
@@ -31,10 +32,24 @@ namespace _Main.Scripts.Units
             Deselect();
         }
 
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+
+            UnitRegistry.Instance.AddUnit(this);
+        }
+
+
         public override void OnNetworkDespawn()
         {
             if (IsServer)
                 UnitRegistry.Instance.RemoveUnit(this);
+        }
+
+        public void SetNavMeshAgentActive(bool isActive)
+        {
+            _navMeshObstacle.enabled = !isActive;
+            _navMeshAgent.enabled = isActive;
         }
 
         public void SetTargetPoint(Vector3 target)
@@ -44,24 +59,36 @@ namespace _Main.Scripts.Units
 
         public void SetAttackUnit(BaseUnit unitToAttack)
         {
-            
         }
+
+        public bool CanReachPoint(Vector3 target) =>
+            CalculatePathLength(CalculatePath(target)) <= _unitSpeed;
 
         public void DrawPath(Vector3 target)
         {
+            if (IsMoving)
+                return;
+            
             Vector3[] path = CalculatePath(target);
-            if (path != null) 
-                _unitPathPredictor.DrawPath(path,  _unitSpeed);
+            if (path != null)
+                _unitPathPredictor.DrawPath(path, _unitSpeed);
         }
 
-        public void HoverEnter() => 
+        public void ClearVisualPath()
+        {
+            _unitPathPredictor.ClearPath();
+        }
+
+        public void HoverEnter() =>
             _hoveredGameObject.SetActive(true);
 
         public void HoverExit() =>
             _hoveredGameObject.SetActive(false);
 
-        public void Select() => 
+        public void Select()
+        {
             _selectedGameObject.SetActive(true);
+        }
 
         public void Deselect()
         {
@@ -76,7 +103,7 @@ namespace _Main.Scripts.Units
         [ClientRpc]
         public void UpdateMaterialClientRpc(PlayerSide playerSide) =>
             _meshRenderer.material = _unitSettings.SideMaterials[playerSide];
-        
+
         public Vector3[] CalculatePath(Vector3 target)
         {
             NavMeshPath path = new NavMeshPath();
@@ -86,8 +113,11 @@ namespace _Main.Scripts.Units
             return path.corners;
         }
 
-        public float CalculatePathLength(Vector3[] path)
+        private float CalculatePathLength(Vector3[] path)
         {
+            if (path == null || path.Length == 0)
+                return -1f;
+            
             float length = 0f;
             for (int i = 1; i < path.Length; i++)
                 length += Vector3.Distance(path[i - 1], path[i]);

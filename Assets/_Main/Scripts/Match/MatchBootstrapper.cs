@@ -49,7 +49,7 @@ namespace _Main.Scripts.Match
             List<ulong> unitsSide1 = SpawnUnitsForPlayer(_spawnPointsPlayer1, PlayerSide.Side1);
             List<ulong> unitsSide2 = SpawnUnitsForPlayer(_spawnPointsPlayer2, PlayerSide.Side2);
             
-            _navMeshBaker.Bake();
+            _navMeshBaker.BakeClientRpc();
 
             _matchController.InitializeMatchClientRpc(player1Id, player2Id, unitsSide1.ToArray(), unitsSide2.ToArray(), seed);
         }
