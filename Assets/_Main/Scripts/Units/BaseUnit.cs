@@ -1,5 +1,7 @@
+using System.Collections;
 using _Main.Scripts.Infrastructure.Interfaces;
 using _Main.Scripts.Settings;
+using _Main.Scripts.Units.UnitsStateMachine;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
@@ -21,8 +23,11 @@ namespace _Main.Scripts.Units
 
         [SerializeField] private UnitPathPredictor _unitPathPredictor;
 
-        public bool IsMoving => _navMeshAgent.hasPath
-                                && _navMeshAgent.remainingDistance > _navMeshAgent.stoppingDistance;
+        private UnitStateMachine _unitStateMachine;
+
+        public bool IsMoving => _unitStateMachine.CurrentState is MoveState;
+        public float Speed => _unitSpeed;
+        public float AttackRange => 0f;
 
         public PlayerSide PlayerSide { get; private set; }
 
@@ -30,6 +35,8 @@ namespace _Main.Scripts.Units
         {
             HoverExit();
             Deselect();
+
+            _unitStateMachine = new UnitStateMachine(this, _navMeshAgent, _navMeshObstacle, _unitPathPredictor);
         }
 
         public override void OnNetworkSpawn()
@@ -46,33 +53,20 @@ namespace _Main.Scripts.Units
                 UnitRegistry.Instance.RemoveUnit(this);
         }
 
-        public void SetNavMeshAgentActive(bool isActive)
-        {
-            _navMeshObstacle.enabled = !isActive;
-            _navMeshAgent.enabled = isActive;
-        }
+        public void ToIdleState() => 
+            _unitStateMachine.ToIdleState();
 
-        public void SetTargetPoint(Vector3 target)
-        {
-            _navMeshAgent.SetDestination(target);
-        }
+        public void ToMoveState(Vector3 target) =>
+            _unitStateMachine.ToMoveState(target);
 
-        public void SetAttackUnit(BaseUnit unitToAttack)
-        {
-        }
+        public void ToAttackState(BaseUnit unitToAttack) =>
+            _unitStateMachine.ToAttackState(unitToAttack);
+
+        public void ToDrawPathState(Vector3 target) =>
+            _unitStateMachine.ToDrawPathState(target);
 
         public bool CanReachPoint(Vector3 target) =>
             CalculatePathLength(CalculatePath(target)) <= _unitSpeed;
-
-        public void DrawPath(Vector3 target)
-        {
-            if (IsMoving)
-                return;
-            
-            Vector3[] path = CalculatePath(target);
-            if (path != null)
-                _unitPathPredictor.DrawPath(path, _unitSpeed);
-        }
 
         public void ClearVisualPath()
         {
@@ -91,7 +85,7 @@ namespace _Main.Scripts.Units
         }
 
         public void Deselect()
-        {
+        { 
             _selectedGameObject.SetActive(false);
             _unitPathPredictor.ClearPath();
         }

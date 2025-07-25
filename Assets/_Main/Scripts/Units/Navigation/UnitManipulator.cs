@@ -58,7 +58,7 @@ namespace _Main.Scripts.Units.Navigation
 
         private void PredicatePath(BaseUnit unit, Vector3 position)
         {
-            unit?.DrawPath(position);
+            unit?.ToDrawPathState(position);
         }
 
         private void SetPathToUnit(BaseUnit unit, Vector3 position)

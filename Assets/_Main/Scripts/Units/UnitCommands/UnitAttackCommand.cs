@@ -1,4 +1,4 @@
-using System.Collections;
+using Cysharp.Threading.Tasks;
 
 namespace _Main.Scripts.Units.UnitCommands
 {
@@ -15,10 +15,9 @@ namespace _Main.Scripts.Units.UnitCommands
             _targetUnit = targetUnit;
         }
 
-        public IEnumerator Execute()
+        public async UniTask Execute()
         {
-            _baseUnit.SetAttackUnit(_targetUnit);
-            yield break;
+            _baseUnit.ToAttackState(_targetUnit);
         }
     }
 }

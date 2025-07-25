@@ -1,4 +1,4 @@
-using System.Collections;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace _Main.Scripts.Units.UnitCommands
@@ -16,15 +16,13 @@ namespace _Main.Scripts.Units.UnitCommands
             _baseUnit = baseUnit;
         }
 
-        public IEnumerator Execute()
+        public async UniTask Execute()
         {
-            _baseUnit.SetTargetPoint(_targetPoint);
-            yield return null;
+            _baseUnit.ToMoveState(_targetPoint);
+            await UniTask.Yield();
           
             while (_baseUnit.IsMoving) 
-                yield return null;
-            
-            yield break;
+                await UniTask.Yield();
         }
     }
 }

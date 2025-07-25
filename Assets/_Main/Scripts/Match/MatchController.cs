@@ -2,8 +2,10 @@ using System;
 using System.Collections;
 using _Main.Scripts.Match.Rounds;
 using _Main.Scripts.Settings;
+using _Main.Scripts.Units;
 using _Main.Scripts.Units.Navigation;
 using _Main.Scripts.Units.UnitCommands;
+using Cysharp.Threading.Tasks;
 using Unity.Netcode;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -46,7 +48,7 @@ namespace _Main.Scripts.Match
 
             int startSide = Random.Range(1, 3);
 
-            MatchModel = new MatchModel(player1Id, player2Id, 0, 10, (PlayerSide) startSide, 1);
+            MatchModel = new MatchModel(player1Id, player2Id, 0, 15, (PlayerSide) startSide, 1);
 
             StartMatch();
         }
@@ -59,6 +61,8 @@ namespace _Main.Scripts.Match
             {
                 _roundController.TurnEnded += StartNewTurnClientRpc;
             }
+            
+            AllUnitsToIdleState();
 
             _roundController.StartRound();
             MatchStarted?.Invoke();
@@ -94,6 +98,8 @@ namespace _Main.Scripts.Match
                 MatchModel.UpdateRoundNumber(MatchModel.RoundNumber + 1);
                 MatchModel.ClearActedPlayers();
             }
+            
+            AllUnitsToIdleState();
 
             _roundController.StartRound();
         }
@@ -102,13 +108,28 @@ namespace _Main.Scripts.Match
         public void SendUnitCommandServerRpc(UnitCommandData commandData)
         {
             IUnitCommand unitCommand = CommandFactory.GetUnitCommand(commandData); 
-            StartCoroutine(WaitCommandExecute(unitCommand));
+            WaitCommandExecute(unitCommand);
         }
 
-        private IEnumerator WaitCommandExecute(IUnitCommand unitCommand)
+        private async UniTask WaitCommandExecute(IUnitCommand unitCommand)
         {
-            yield return unitCommand.Execute();
+            await unitCommand.Execute();
             StartNewTurnClientRpc();
+        }
+
+        private void AllUnitsToIdleState()
+        {
+            foreach (var unitId in _matchUnitsModel.GetAllUnitsBySide(PlayerSide.Side1))
+            {
+                UnitRegistry.Instance.TryGetUnit(unitId,out var unit);
+                unit.ToIdleState();
+            }
+            
+            foreach (var unitId in _matchUnitsModel.GetAllUnitsBySide(PlayerSide.Side2))
+            {
+                UnitRegistry.Instance.TryGetUnit(unitId,out var unit);
+                unit.ToIdleState();
+            }
         }
     }
 }
