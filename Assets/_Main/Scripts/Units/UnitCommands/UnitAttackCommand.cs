@@ -18,6 +18,10 @@ namespace _Main.Scripts.Units.UnitCommands
         public async UniTask Execute()
         {
             _baseUnit.ToAttackState(_targetUnit);
+            await UniTask.Yield();
+            
+            while (_baseUnit.IsAttacking) 
+                await UniTask.Yield();
         }
     }
 }

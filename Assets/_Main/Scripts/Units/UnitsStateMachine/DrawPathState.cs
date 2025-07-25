@@ -1,5 +1,6 @@
 using System.Threading;
 using _Main.Scripts.Infrastructure.StateMachine;
+using _Main.Scripts.Match;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AI;
@@ -15,20 +16,23 @@ namespace _Main.Scripts.Units.UnitsStateMachine
 
         private Vector3 _target;
         private CancellationTokenSource _cancellationTokenSource;
+        private AttackRadiusView _attackRadiusView;
 
-        public DrawPathState(UnitStateMachine unitStateMachine, NavMeshAgent navMeshAgent, NavMeshObstacle navMeshObstacle, UnitPathPredictor pathPredictor, Vector3 target)
+        public DrawPathState(UnitStateMachine unitStateMachine, NavMeshAgent navMeshAgent, NavMeshObstacle navMeshObstacle, UnitPathPredictor pathPredictor, AttackRadiusView attackRadiusView, Vector3 target)
         {
             _unitStateMachine = unitStateMachine;
             _navMeshAgent = navMeshAgent;
             _navMeshObstacle = navMeshObstacle;
             _unitPathPredictor = pathPredictor;
+            _attackRadiusView = attackRadiusView;
             _target = target;
             _cancellationTokenSource = new CancellationTokenSource();
         }
         
         public void Enter()
         {
-            SwitchObstacleActive();
+            if (MatchController.Instance.MatchModel.MoveAvailable)
+                SwitchObstacleActive();
         }
 
         public void Update()
@@ -39,6 +43,7 @@ namespace _Main.Scripts.Units.UnitsStateMachine
         {
             _unitPathPredictor.ClearPath();
             _cancellationTokenSource.Cancel();
+            _attackRadiusView.transform.localPosition = Vector3.zero;
         }
         
         private async UniTask SwitchObstacleActive()
@@ -64,6 +69,8 @@ namespace _Main.Scripts.Units.UnitsStateMachine
             Vector3[] path = _unitStateMachine.BaseUnit.CalculatePath(_target);
             if (path != null)
                 _unitPathPredictor.DrawPath(path, _unitStateMachine.BaseUnit.Speed);
+
+            _attackRadiusView.transform.position = _target;
         }
     }
 }

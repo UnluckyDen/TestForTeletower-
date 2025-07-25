@@ -19,6 +19,8 @@ namespace _Main.Scripts.Match
         public PlayerSide CurrentSide { get; private set; }
         public int RoundNumber { get; private set; }
         public bool WaitingToExecuteCommand { get; private set; }
+        public bool AttackAvailable { get; private set; }
+        public bool MoveAvailable { get; private set; }
 
 
         public MatchModel(ulong player1Id, ulong player2Id, float currentTime, float maxTurnTime,
@@ -63,6 +65,18 @@ namespace _Main.Scripts.Match
         public void UpdateWaitingExecuteCommand(bool waiting)
         {
             WaitingToExecuteCommand = waiting;
+            ModelUpdated?.Invoke();
+        }
+
+        public void SetAttackAvailable(bool attackAvailable)
+        {
+            AttackAvailable = attackAvailable;
+            ModelUpdated?.Invoke();
+        }
+
+        public void SetMoveAvailable(bool moveAvailable)
+        {
+            MoveAvailable = moveAvailable;
             ModelUpdated?.Invoke();
         }
 

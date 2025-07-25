@@ -12,6 +12,8 @@ namespace _Main.Scripts.UI.MatchUI
         [SerializeField] private TMP_Text _roundNumber;
         [SerializeField] private TMP_Text _timerText;
         [SerializeField] private TMP_Text _sideTurn;
+        [SerializeField] private TMP_Text _attackAvailable;
+        [SerializeField] private TMP_Text _moveAvailable;
 
         private MatchModel _matchModel;
 
@@ -48,6 +50,8 @@ namespace _Main.Scripts.UI.MatchUI
             _roundNumber.text = $"Round number: {_matchModel.RoundNumber}";
             _timerText.text = _matchModel.WaitingToExecuteCommand ? "Waiting end of turn" : $"Round time {(int) _matchModel.CurrentTime}";
             _sideTurn.text = $"Now turn of <color #{_unitSettings.SideCollors[_matchModel.CurrentSide].ToHexString()}>{_unitSettings.SideNames[_matchModel.CurrentSide]}</color>";
+            _moveAvailable.text = _matchModel.MoveAvailable ? $"Move available" : $"Move not available";
+            _attackAvailable.text = _matchModel.AttackAvailable ? $"Attack available" : $"Attack not available";
         }
     }
 }

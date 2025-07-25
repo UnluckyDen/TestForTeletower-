@@ -12,15 +12,17 @@ namespace _Main.Scripts.Units.UnitsStateMachine
         private NavMeshAgent _navMeshAgent;
         private NavMeshObstacle _navMeshObstacle;
         private UnitPathPredictor _unitPathPredicator;
+        private AttackRadiusView _attackRadiusView;
 
         public BaseUnit BaseUnit => _baseUnit;
 
-        public UnitStateMachine(BaseUnit baseUnit, NavMeshAgent navMeshAgent, NavMeshObstacle navMeshObstacle, UnitPathPredictor unitPathPredictor)
+        public UnitStateMachine(BaseUnit baseUnit, NavMeshAgent navMeshAgent, NavMeshObstacle navMeshObstacle, UnitPathPredictor unitPathPredictor, AttackRadiusView attackRadiusView)
         {
             _baseUnit = baseUnit;
             _navMeshAgent = navMeshAgent;
             _navMeshObstacle = navMeshObstacle;
             _unitPathPredicator = unitPathPredictor;
+            _attackRadiusView = attackRadiusView;
         }
 
         public void ToIdleState() =>
@@ -30,10 +32,13 @@ namespace _Main.Scripts.Units.UnitsStateMachine
             ToState(new MoveState(this, _navMeshAgent, _navMeshObstacle, target));
 
         public void ToAttackState(BaseUnit unitToAttack) =>
-            ToState(null);
+            ToState(new AttackState(this, unitToAttack));
         
-        public void ToDrawPathState(Vector3 target)
-        {ToState(new DrawPathState(this, _navMeshAgent, _navMeshObstacle, _unitPathPredicator, target));}
+        public void ToDrawPathState(Vector3 target) =>
+            ToState(new DrawPathState(this, _navMeshAgent, _navMeshObstacle, _unitPathPredicator, _attackRadiusView, target));
+
+        public void ToCalculatePathState() =>
+            ToState(new CalculatePathState(this, _navMeshAgent, _navMeshObstacle));
 
         public async UniTask WaitUntilNavMeshIsUpdated(CancellationToken cancellationToken, float checkRadius = 0.1f, float timeout = 1f)
         {

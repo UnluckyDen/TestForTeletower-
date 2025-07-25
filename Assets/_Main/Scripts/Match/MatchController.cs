@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using _Main.Scripts.Match.Rounds;
 using _Main.Scripts.Settings;
 using _Main.Scripts.Units;
@@ -25,6 +24,9 @@ namespace _Main.Scripts.Match
         public static MatchController Instance { get; private set; }
         public MatchModel MatchModel { get; private set; }
 
+        private bool _waitingCommandExecuting = false;
+        private bool _waitTurnChange = false; 
+        
         private void Awake()
         {
             if (Instance != null)
@@ -49,6 +51,8 @@ namespace _Main.Scripts.Match
             int startSide = Random.Range(1, 3);
 
             MatchModel = new MatchModel(player1Id, player2Id, 0, 15, (PlayerSide) startSide, 1);
+            MatchModel.SetAttackAvailable(true);
+            MatchModel.SetMoveAvailable(true);
 
             StartMatch();
         }
@@ -59,7 +63,7 @@ namespace _Main.Scripts.Match
 
             if (IsServer)
             {
-                _roundController.TurnEnded += StartNewTurnClientRpc;
+                _roundController.TurnEnded += RoundControllerOnTurnEnded;
             }
             
             AllUnitsToIdleState();
@@ -72,7 +76,7 @@ namespace _Main.Scripts.Match
         {
             if (IsServer)
             { 
-                _roundController.TurnEnded -= StartNewTurnClientRpc;
+                _roundController.TurnEnded -= RoundControllerOnTurnEnded;
             }
         }
 
@@ -82,8 +86,24 @@ namespace _Main.Scripts.Match
             PlayerSide playerSide = MatchModel.GetPlayerSide(playerId);
             PlayerSide unitSide = _matchUnitsModel.GetUnitSide(unitId);
             
-            return (playerSide == unitSide) 
-                   && (playerSide == turnSide);
+            return playerSide == unitSide
+                   && playerSide == turnSide;
+        }
+
+        public bool CanAttackUnit(ulong playerId, ulong unitId, ulong unitToAttackId)
+        {
+            PlayerSide turnSide = MatchModel.CurrentSide;
+            PlayerSide playerSide = MatchModel.GetPlayerSide(playerId);
+            PlayerSide unitSide = _matchUnitsModel.GetUnitSide(unitId);
+            PlayerSide unitToAttackSide = _matchUnitsModel.GetUnitSide(unitToAttackId);
+
+            UnitRegistry.Instance.TryGetUnit(unitId, out var unit);
+            UnitRegistry.Instance.TryGetUnit(unitToAttackId, out var unitToAttack);
+            
+            return turnSide == unitSide
+                   && playerSide == turnSide
+                   && unitSide != unitToAttackSide
+                   && unit.CanAttackReachUnit(unitToAttack);
         }
 
         [ClientRpc]
@@ -92,6 +112,8 @@ namespace _Main.Scripts.Match
             MatchModel.AddActedPlayers(MatchModel.CurrentSide);
             PlayerSide newSide = MatchModel.CurrentSide == PlayerSide.Side1 ? PlayerSide.Side2 : PlayerSide.Side1;
             MatchModel.UpdateCurrentSide(newSide);
+            MatchModel.SetAttackAvailable(true);
+            MatchModel.SetMoveAvailable(true);
 
             if (MatchModel.ContainsActedSide(PlayerSide.Side1) && MatchModel.ContainsActedSide(PlayerSide.Side2))
             {
@@ -107,14 +129,78 @@ namespace _Main.Scripts.Match
         [ServerRpc(RequireOwnership = false)]
         public void SendUnitCommandServerRpc(UnitCommandData commandData)
         {
-            IUnitCommand unitCommand = CommandFactory.GetUnitCommand(commandData); 
+            if (_waitingCommandExecuting)
+                return;
+            
+            IUnitCommand unitCommand = CommandFactory.GetUnitCommand(commandData);
             WaitCommandExecute(unitCommand);
+        }
+        
+        [ServerRpc(RequireOwnership = false)]
+        public void AttackUnitServerRpc(ulong unitToAttackId)
+        {
+            UnitRegistry.Instance.TryGetUnit(unitToAttackId, out BaseUnit unitToAttack);
+            AttackUnitClientRpc(unitToAttack.PlayerSide, unitToAttackId);
+            unitToAttack.NetworkObject.Despawn();
+            Destroy(unitToAttack.gameObject);
+        }
+
+        [ClientRpc]
+        private void AttackUnitClientRpc(PlayerSide playerSide, ulong unitToAttack)
+        {
+            _matchUnitsModel.RemoveUnit(playerSide, unitToAttack);
         }
 
         private async UniTask WaitCommandExecute(IUnitCommand unitCommand)
         {
+            _waitingCommandExecuting = true;
+
+            switch (unitCommand)
+            {
+                case UnitMoveUnitCommand when !MatchModel.MoveAvailable:
+                    _waitingCommandExecuting = false;
+                    return;
+                case UnitMoveUnitCommand:
+                    UpdateMoveAvailableClientRpc(false);
+                    break;
+                case UnitAttackUnitCommand when !MatchModel.AttackAvailable:
+                    _waitingCommandExecuting = false;
+                    return;
+                case UnitAttackUnitCommand:
+                    UpdateAttackAvailableClientRpc(false);
+                    break;
+            }
+
             await unitCommand.Execute();
+            
+            _waitingCommandExecuting = false;
+            
+            if (!MatchModel.AttackAvailable && !MatchModel.MoveAvailable)
+                StartNewTurnClientRpc();
+        }
+
+        [ClientRpc]
+        private void UpdateMoveAvailableClientRpc(bool available) =>
+            MatchModel.SetMoveAvailable(available);
+
+        [ClientRpc]
+        private void UpdateAttackAvailableClientRpc(bool available) =>
+            MatchModel.SetAttackAvailable(available);
+
+        private void RoundControllerOnTurnEnded() =>
+            WaitCommandExecuting();
+
+        private async UniTask WaitCommandExecuting()
+        {
+            if (_waitTurnChange)
+                return;
+
+            _waitTurnChange = true;
+            while (_waitingCommandExecuting)
+                await UniTask.Yield();
+            
             StartNewTurnClientRpc();
+            _waitTurnChange = false;
         }
 
         private void AllUnitsToIdleState()

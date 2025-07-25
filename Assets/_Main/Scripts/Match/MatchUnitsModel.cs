@@ -39,5 +39,8 @@ namespace _Main.Scripts.Match
         
         public List<ulong> GetAllUnitsBySide(PlayerSide side) =>
             _unitListBySides.GetValueOrDefault(side);
+
+        public void RemoveUnit(PlayerSide playerSide, ulong baseUnit) =>
+            _unitListBySides[playerSide].Remove(baseUnit);
     }
 }

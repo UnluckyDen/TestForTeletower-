@@ -18,6 +18,18 @@ namespace _Main.Scripts.Units.UnitCommands
 
         public async UniTask Execute()
         {
+            _baseUnit.ToCalculateState();
+            while (!_baseUnit.ReadyCalculatePath)
+                await UniTask.Yield();
+
+            await UniTask.Yield();
+
+            if (!_baseUnit.CanReachPoint(_targetPoint))
+            {
+                _baseUnit.ToIdleState();
+                return;
+            }
+
             _baseUnit.ToMoveState(_targetPoint);
             await UniTask.Yield();
           

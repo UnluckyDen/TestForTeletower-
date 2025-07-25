@@ -42,8 +42,8 @@ namespace _Main.Scripts.Match.Rounds
 
         private void UnitManipulatorOnUnitCommandGiven(UnitCommandData command)
         {
-            _matchModel.UpdateWaitingExecuteCommand(true);
-            MatchController.Instance.SendUnitCommandServerRpc(command); }
+            MatchController.Instance.SendUnitCommandServerRpc(command);
+        }
 
         private void UpdateTimer()
         {
@@ -51,7 +51,9 @@ namespace _Main.Scripts.Match.Rounds
             _matchModel.UpdateCurrentTime(_currentTime);
 
             if (_currentTime > _matchModel.MaxTurnTime)
-                _roundController.EndTurn();
+            {
+                _roundController.EndTurn(); 
+            }
         }
     }
 }

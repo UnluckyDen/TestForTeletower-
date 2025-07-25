@@ -63,6 +63,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _objectSelector: {fileID: 226755947286423702}
   _mainCamera: {fileID: 0}
-  _groundLayerMask:
+  _manipulatorLayerMask:
     serializedVersion: 2
-    m_Bits: 1
+    m_Bits: 192

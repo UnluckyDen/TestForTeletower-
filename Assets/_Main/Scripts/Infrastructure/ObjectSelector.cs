@@ -40,8 +40,11 @@ namespace _Main.Scripts.Infrastructure
                 IHoverable hoverable = _raycastHits[0].collider.GetComponent<IHoverable>();
 
                 if (hoverable != null)
-                {
-                    HoverEnter(hoverable);
+                { 
+                    if (_hoveredObject != null && _hoveredObject == hoverable)
+                        return;
+                    
+                    HoverEnter(hoverable); 
                     return;
                 }
             }
@@ -71,6 +74,9 @@ namespace _Main.Scripts.Infrastructure
 
         private void HoverEnter(IHoverable hoverable)
         {
+            if (_hoveredObject != null)
+                _hoveredObject.HoverExit();
+            
             _hoveredObject = hoverable;
             _hoveredObject.HoverEnter();
         }

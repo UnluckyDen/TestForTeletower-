@@ -13,12 +13,12 @@ namespace _Main.Scripts.Units.Navigation
 
         [SerializeField] private ObjectSelector _objectSelector;
         [SerializeField] private Camera _mainCamera;
-        [SerializeField] private LayerMask _groundLayerMask;
-
+        [SerializeField] private LayerMask _manipulatorLayerMask;
+        [SerializeField] private float _doubleClickThreshold = 0.3f;
+        
         private readonly RaycastHit[] _raycastHits = new RaycastHit[1];
 
         private float _lastClickTime = 0f;
-        private float _doubleClickThreshold = 0.3f;
         
         private Vector3 _lastClickedPoint;
 
@@ -36,13 +36,22 @@ namespace _Main.Scripts.Units.Navigation
             if (!MatchController.Instance.CanUseUnit(NetworkManager.Singleton.LocalClientId, unit.NetworkObjectId)) return;
 
             Ray ray = _mainCamera.ScreenPointToRay(Input.mousePosition);
-            int hitCount = Physics.RaycastNonAlloc(ray, _raycastHits, 100f, _groundLayerMask);
+            int hitCount = Physics.RaycastNonAlloc(ray, _raycastHits, 100f, _manipulatorLayerMask);
 
-            if (hitCount == 0) return;
+            if (hitCount == 0) 
+                return;
 
             Vector3 clickedPoint = _raycastHits[0].point;
             float currentTime = Time.time;
 
+            BaseUnit unitToAttack = _raycastHits[0].collider.GetComponent<BaseUnit>();
+            
+            if (unitToAttack != null)
+            { 
+                AttackUnit(unit, unitToAttack);
+                return;
+            }
+                
             if (currentTime - _lastClickTime <= _doubleClickThreshold)
             {
                 SetPathToUnit(unit, clickedPoint);
@@ -72,6 +81,17 @@ namespace _Main.Scripts.Units.Navigation
                 unit.NetworkObjectId,
                 position,
                 0));
+        }
+
+        private void AttackUnit(BaseUnit unit, BaseUnit unitToAttack)
+        {
+            Debug.Log($"Unit {unit.NetworkObjectId} try attack {unitToAttack.NetworkObjectId}");
+            if (MatchController.Instance.CanAttackUnit(NetworkManager.Singleton.LocalClientId, unit.NetworkObjectId, unitToAttack.NetworkObjectId))
+                UnitCommandGiven?.Invoke(new UnitCommandData(
+                    UnitCommandType.AttackCommand,
+                    unit.NetworkObjectId,
+                    Vector3.zero,
+                    unitToAttack.NetworkObjectId));
         }
     }
 }
