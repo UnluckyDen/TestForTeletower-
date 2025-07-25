@@ -5,6 +5,7 @@ using _Main.Scripts.Map;
 using _Main.Scripts.Settings;
 using _Main.Scripts.Units;
 using _Main.Scripts.Units.Navigation;
+using AYellowpaper.SerializedCollections;
 
 namespace _Main.Scripts.Match
 {
@@ -16,8 +17,7 @@ namespace _Main.Scripts.Match
         
         [SerializeField] private MatchController _matchController;
         
-        [SerializeField] private Transform[] _spawnPointsPlayer1;
-        [SerializeField] private Transform[] _spawnPointsPlayer2;
+        [SerializeField] private SerializedDictionary<PlayerSide, List<UnitType>> _unitsForSides;
         
         private readonly List<ulong> _connectedClients = new();
 
@@ -46,23 +46,22 @@ namespace _Main.Scripts.Match
             int seed = NetworkManager.Singleton.ServerTime.Tick;
             _mapGenerator.GenerateMapClientRpc(seed);
 
-            List<ulong> unitsSide1 = SpawnUnitsForPlayer(_spawnPointsPlayer1, PlayerSide.Side1);
-            List<ulong> unitsSide2 = SpawnUnitsForPlayer(_spawnPointsPlayer2, PlayerSide.Side2);
+            List<ulong> unitsSide1 = SpawnUnitsForPlayer(PlayerSide.Side1);
+            List<ulong> unitsSide2 = SpawnUnitsForPlayer(PlayerSide.Side2);
             
             _navMeshBaker.BakeClientRpc();
 
             _matchController.InitializeMatchClientRpc(player1Id, player2Id, unitsSide1.ToArray(), unitsSide2.ToArray(), seed);
         }
 
-        private List<ulong> SpawnUnitsForPlayer(Transform[] spawnPoints, PlayerSide side)
+        private List<ulong> SpawnUnitsForPlayer(PlayerSide side)
         {
             List<ulong> spawnedUnits = new List<ulong>();
-            foreach (var point in spawnPoints)
-            {
-                BaseUnit unit = _unitSpawner.SpawnUnit(side, point.position, point.eulerAngles);
 
+            List<BaseUnit> units = _unitSpawner.SpawnUnits(side, _unitsForSides[side]);
+            
+            foreach (var unit in units)
                 spawnedUnits.Add(unit.NetworkObjectId);
-            }
             
             return spawnedUnits;
         }

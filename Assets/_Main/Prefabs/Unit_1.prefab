@@ -98,7 +98,7 @@ GameObject:
   - component: {fileID: 4399049048167086764}
   - component: {fileID: 6376180760480575041}
   m_Layer: 6
-  m_Name: Unit
+  m_Name: Unit_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -183,7 +183,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _unitSettings: {fileID: 11400000, guid: 35bc56d3182144d0590e2048cd0b561a, type: 2}
-  _unitSpeed: 3
+  _unitSpeed: 5
   _attackRange: 3
   _attackLayerMask:
     serializedVersion: 2

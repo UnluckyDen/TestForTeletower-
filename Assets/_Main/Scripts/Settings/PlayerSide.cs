@@ -6,4 +6,10 @@ namespace _Main.Scripts.Settings
         Side2 = 2,
         Side3 = 3
     }
+    
+    public enum UnitType
+    {
+        Fast = 1,
+        Slow = 2,
+    }
 }
