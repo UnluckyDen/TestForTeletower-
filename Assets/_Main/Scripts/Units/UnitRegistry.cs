@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace _Main.Scripts.Units
@@ -33,5 +34,8 @@ namespace _Main.Scripts.Units
         {
             return _units.TryGetValue(id, out unit);
         }
+
+        public List<BaseUnit> GetAllUnits() =>
+            _units.Values.ToList();
     }
 }

@@ -144,6 +144,10 @@ namespace _Main.Scripts.Units
         [ClientRpc]
         public void UpdateMaterialClientRpc(PlayerSide playerSide) =>
             _meshRenderer.material = _unitSettings.SideMaterials[playerSide];
+        
+        [ClientRpc]
+        public void UpdateSpeedClientRpc(float speed) =>
+            _unitSpeed = speed;
 
         public Vector3[] CalculatePath(Vector3 target)
         {
