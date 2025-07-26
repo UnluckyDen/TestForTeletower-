@@ -133,7 +133,7 @@ namespace _Main.Scripts.Units
         public void Select()
         {
             _selectedGameObject.SetActive(true);
-            _attackRadiusView.CheckZone(true);
+            _attackRadiusView.SetZoneActive(true);
             Selected = true;
         }
 
@@ -143,7 +143,7 @@ namespace _Main.Scripts.Units
                 return;
 
             Selected = false;
-            _attackRadiusView.CheckZone(false);
+            _attackRadiusView.SetZoneActive(false);
             _selectedGameObject.SetActive(false);
             ClearVisualPath();
         }

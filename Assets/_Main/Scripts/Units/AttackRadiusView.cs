@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using _Main.Scripts.Settings;
 using UnityEngine;
@@ -14,7 +13,7 @@ namespace _Main.Scripts.Units
         private float _attackRange;
 
         private List<BaseUnit> _unistOnCheck = new();
-        private Collider[] _results = new Collider[50];
+        private Collider[] _results = new Collider[20];
 
         private bool _active;
         
@@ -36,10 +35,15 @@ namespace _Main.Scripts.Units
                 CheckZone(_active);
         }
 
-        public void CheckZone(bool active)
+        public void SetZoneActive(bool active)
+        {
+            _active = active;
+            transform.gameObject.SetActive(active);
+        }
+
+        private void CheckZone(bool active)
         {
             _active = true;
-            transform.gameObject.SetActive(active);
             
             foreach (var baseUnit in _unistOnCheck)
             {

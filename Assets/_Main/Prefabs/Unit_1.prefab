@@ -161,7 +161,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 1368182712
+  GlobalObjectIdHash: 1459400698
   InScenePlacedSourceGlobalObjectIdHash: 1459400698
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
@@ -183,8 +183,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _unitSettings: {fileID: 11400000, guid: 35bc56d3182144d0590e2048cd0b561a, type: 2}
-  _unitSpeed: 5
-  _attackRange: 3
+  _unitSpeed: 9
+  _attackRange: 1.5
   _attackLayerMask:
     serializedVersion: 2
     m_Bits: 64
