@@ -18,13 +18,14 @@ namespace _Main.Scripts.Match
         public float MaxTurnTime { get; private set; }
         public PlayerSide CurrentSide { get; private set; }
         public int RoundNumber { get; private set; }
+        public int MaxRoundNumber { get; private set; }
         public bool WaitingToExecuteCommand { get; private set; }
         public bool AttackAvailable { get; private set; }
         public bool MoveAvailable { get; private set; }
 
 
         public MatchModel(ulong player1Id, ulong player2Id, float currentTime, float maxTurnTime,
-            PlayerSide currentSide, int roundNumber)
+            PlayerSide currentSide, int roundNumber, int maxRoundNumber)
         {
             Player1Id = player1Id;
             Player2Id = player2Id;
@@ -39,6 +40,7 @@ namespace _Main.Scripts.Match
             MaxTurnTime = maxTurnTime;
             CurrentSide = currentSide;
             RoundNumber = roundNumber;
+            MaxRoundNumber = maxRoundNumber;
         }
 
         public PlayerSide GetPlayerSide(ulong playerId) =>

@@ -38,7 +38,7 @@ namespace _Main.Scripts.UI.MatchUI
             MatchModelOnModelUpdated();
         }
 
-        private void MatchControllerOnMatchEnded()
+        private void MatchControllerOnMatchEnded(PlayerSide playerSide)
         {
             gameObject.SetActive(false);
             _matchModel.ModelUpdated -= MatchModelOnModelUpdated;

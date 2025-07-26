@@ -14,10 +14,12 @@ namespace _Main.Scripts.Match
     public class MatchController : NetworkBehaviour
     {
         public event Action MatchStarted;
-        public event Action MatchEnded;
+        public event Action<PlayerSide> MatchEnded;
 
         [SerializeField] private UnitManipulator _unitManipulator;
-        
+        [SerializeField] private int _roundTime;
+        [SerializeField] private int _maxRoundCount = 15;
+
         private MatchUnitsModel _matchUnitsModel;
         private RoundController _roundController;
 
@@ -25,8 +27,8 @@ namespace _Main.Scripts.Match
         public MatchModel MatchModel { get; private set; }
 
         private bool _waitingCommandExecuting = false;
-        private bool _waitTurnChange = false; 
-        
+        private bool _waitTurnChange = false;
+
         private void Awake()
         {
             if (Instance != null)
@@ -42,15 +44,16 @@ namespace _Main.Scripts.Match
             _roundController?.UpdateStates();
 
         [ClientRpc]
-        public void InitializeMatchClientRpc(ulong player1Id, ulong player2Id, ulong[] unitsSide1, ulong[] unitsSide2, int seed)
+        public void InitializeMatchClientRpc(ulong player1Id, ulong player2Id, ulong[] unitsSide1, ulong[] unitsSide2,
+            int seed)
         {
             _matchUnitsModel = new MatchUnitsModel(unitsSide1, unitsSide2);
-            
+
             Random.InitState(seed);
 
             int startSide = Random.Range(1, 3);
 
-            MatchModel = new MatchModel(player1Id, player2Id, 0, 15, (PlayerSide) startSide, 1);
+            MatchModel = new MatchModel(player1Id, player2Id, 0, _roundTime, (PlayerSide)startSide, 1, _maxRoundCount);
             MatchModel.SetAttackAvailable(true);
             MatchModel.SetMoveAvailable(true);
 
@@ -65,17 +68,19 @@ namespace _Main.Scripts.Match
             {
                 _roundController.TurnEnded += RoundControllerOnTurnEnded;
             }
-            
+
             AllUnitsToIdleState();
 
             _roundController.StartRound();
             MatchStarted?.Invoke();
         }
 
-        private void EndMatch()
+        [ClientRpc]
+        private void EndMatchClientRpc(PlayerSide winSide)
         {
+            MatchEnded?.Invoke(winSide);
             if (IsServer)
-            { 
+            {
                 _roundController.TurnEnded -= RoundControllerOnTurnEnded;
             }
         }
@@ -85,7 +90,7 @@ namespace _Main.Scripts.Match
             PlayerSide turnSide = MatchModel.CurrentSide;
             PlayerSide playerSide = MatchModel.GetPlayerSide(playerId);
             PlayerSide unitSide = _matchUnitsModel.GetUnitSide(unitId);
-            
+
             return playerSide == unitSide
                    && playerSide == turnSide;
         }
@@ -99,7 +104,7 @@ namespace _Main.Scripts.Match
 
             UnitRegistry.Instance.TryGetUnit(unitId, out var unit);
             UnitRegistry.Instance.TryGetUnit(unitToAttackId, out var unitToAttack);
-            
+
             return turnSide == unitSide
                    && playerSide == turnSide
                    && unitSide != unitToAttackSide
@@ -120,7 +125,7 @@ namespace _Main.Scripts.Match
                 MatchModel.UpdateRoundNumber(MatchModel.RoundNumber + 1);
                 MatchModel.ClearActedPlayers();
             }
-            
+
             AllUnitsToIdleState();
 
             _roundController.StartRound();
@@ -131,11 +136,11 @@ namespace _Main.Scripts.Match
         {
             if (_waitingCommandExecuting)
                 return;
-            
+
             IUnitCommand unitCommand = CommandFactory.GetUnitCommand(commandData);
             WaitCommandExecute(unitCommand);
         }
-        
+
         [ServerRpc(RequireOwnership = false)]
         public void AttackUnitServerRpc(ulong unitToAttackId)
         {
@@ -172,11 +177,8 @@ namespace _Main.Scripts.Match
             }
 
             await unitCommand.Execute();
-            
+
             _waitingCommandExecuting = false;
-            
-            if (!MatchModel.AttackAvailable && !MatchModel.MoveAvailable)
-                StartNewTurnClientRpc();
         }
 
         [ClientRpc]
@@ -198,7 +200,13 @@ namespace _Main.Scripts.Match
             _waitTurnChange = true;
             while (_waitingCommandExecuting)
                 await UniTask.Yield();
-            
+
+            if (CheckSideWin())
+            {
+                _waitTurnChange = false;
+                return;
+            }
+
             StartNewTurnClientRpc();
             _waitTurnChange = false;
         }
@@ -207,15 +215,35 @@ namespace _Main.Scripts.Match
         {
             foreach (var unitId in _matchUnitsModel.GetAllUnitsBySide(PlayerSide.Side1))
             {
-                UnitRegistry.Instance.TryGetUnit(unitId,out var unit);
+                UnitRegistry.Instance.TryGetUnit(unitId, out var unit);
                 unit.ToIdleState();
             }
-            
+
             foreach (var unitId in _matchUnitsModel.GetAllUnitsBySide(PlayerSide.Side2))
             {
-                UnitRegistry.Instance.TryGetUnit(unitId,out var unit);
+                UnitRegistry.Instance.TryGetUnit(unitId, out var unit);
                 unit.ToIdleState();
             }
+        }
+
+        private bool CheckSideWin()
+        {
+            int side1 = _matchUnitsModel.GetAllUnitsBySide(PlayerSide.Side1).Count;
+            int side2 = _matchUnitsModel.GetAllUnitsBySide(PlayerSide.Side2).Count;
+
+            if (side1 == 0 || (MatchModel.RoundNumber > MatchModel.MaxRoundNumber && side2 > side1))
+            {
+                EndMatchClientRpc(PlayerSide.Side2);
+                return true;
+            }
+
+            if (side2 == 0 || (MatchModel.RoundNumber > MatchModel.MaxRoundNumber && side1 > side2))
+            {
+                EndMatchClientRpc(PlayerSide.Side1);
+                return true;
+            }
+
+            return false;
         }
     }
 }

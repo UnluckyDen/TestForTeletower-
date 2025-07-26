@@ -867,3 +867,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _unitManipulator: {fileID: 0}
+  _roundTime: 60
