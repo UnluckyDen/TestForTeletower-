@@ -16,8 +16,6 @@ namespace _Main.Scripts.Units.Navigation
         [SerializeField] private LayerMask _manipulatorLayerMask;
         [SerializeField] private float _doubleClickThreshold = 0.3f;
         
-        private readonly RaycastHit[] _raycastHits = new RaycastHit[1];
-
         private float _lastClickTime = 0f;
         
         private Vector3 _lastClickedPoint;
@@ -29,22 +27,23 @@ namespace _Main.Scripts.Units.Navigation
 
         private void Update()
         {
-            if (!Input.GetMouseButtonDown(1)) return;
-
-            if (_objectSelector.SelectedObject is not BaseUnit unit) return;
-
-            if (!MatchController.Instance.CanUseUnit(NetworkManager.Singleton.LocalClientId, unit.NetworkObjectId)) return;
-
-            Ray ray = _mainCamera.ScreenPointToRay(Input.mousePosition);
-            int hitCount = Physics.RaycastNonAlloc(ray, _raycastHits, 100f, _manipulatorLayerMask);
-
-            if (hitCount == 0) 
+            if (!Input.GetMouseButtonDown(1))
                 return;
 
-            Vector3 clickedPoint = _raycastHits[0].point;
-            float currentTime = Time.time;
+            if (_objectSelector.SelectedObject is not BaseUnit unit)
+                return;
 
-            BaseUnit unitToAttack = _raycastHits[0].collider.GetComponent<BaseUnit>();
+            if (!MatchController.Instance.CanUseUnit(NetworkManager.Singleton.LocalClientId, unit.NetworkObjectId))
+                return;
+
+            Ray ray = _mainCamera.ScreenPointToRay(Input.mousePosition);
+            if (!Physics.Raycast(ray.origin, ray.direction, out RaycastHit hit, 100f, _manipulatorLayerMask))
+                return;
+            
+            Vector3 clickedPoint = hit.point;
+            float currentTime = Time.time;
+            
+            BaseUnit unitToAttack = hit.collider.GetComponent<BaseUnit>();
             
             if (unitToAttack != null)
             { 
@@ -85,7 +84,6 @@ namespace _Main.Scripts.Units.Navigation
 
         private void AttackUnit(BaseUnit unit, BaseUnit unitToAttack)
         {
-            Debug.Log($"Unit {unit.NetworkObjectId} try attack {unitToAttack.NetworkObjectId}");
             if (MatchController.Instance.CanAttackUnit(NetworkManager.Singleton.LocalClientId, unit.NetworkObjectId, unitToAttack.NetworkObjectId))
                 UnitCommandGiven?.Invoke(new UnitCommandData(
                     UnitCommandType.AttackCommand,
