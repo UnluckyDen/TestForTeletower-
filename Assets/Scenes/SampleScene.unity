@@ -3540,16 +3540,6 @@ PrefabInstance:
       objectReference: {fileID: 344793832}
     - target: {fileID: 1724727269662962846, guid: 332a1886b99b64ab0925d286ab96cb22,
         type: 3}
-      propertyPath: _roundTime
-      value: 10
-      objectReference: {fileID: 0}
-    - target: {fileID: 1724727269662962846, guid: 332a1886b99b64ab0925d286ab96cb22,
-        type: 3}
-      propertyPath: _maxRoundCount
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 1724727269662962846, guid: 332a1886b99b64ab0925d286ab96cb22,
-        type: 3}
       propertyPath: _unitManipulator
       value: 
       objectReference: {fileID: 518117471}

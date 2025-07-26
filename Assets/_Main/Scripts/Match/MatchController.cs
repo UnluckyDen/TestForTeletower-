@@ -27,7 +27,7 @@ namespace _Main.Scripts.Match
         public MatchModel MatchModel { get; private set; }
 
         private bool _waitingCommandExecuting = false;
-        private bool _waitTurnChange = false;
+        private bool _startingNewTurn = false;
 
         private void Awake()
         {
@@ -178,6 +178,9 @@ namespace _Main.Scripts.Match
 
             await unitCommand.Execute();
 
+            if (!CheckSideAvailableActions())
+                StartNewTurnAfterCommandExecuting();
+            
             _waitingCommandExecuting = false;
         }
 
@@ -190,25 +193,25 @@ namespace _Main.Scripts.Match
             MatchModel.SetAttackAvailable(available);
 
         private void RoundControllerOnTurnEnded() =>
-            WaitCommandExecuting();
+            StartNewTurnAfterCommandExecuting();
 
-        private async UniTask WaitCommandExecuting()
+        private async UniTask StartNewTurnAfterCommandExecuting()
         {
-            if (_waitTurnChange)
+            if (_startingNewTurn)
                 return;
 
-            _waitTurnChange = true;
+            _startingNewTurn = true;
             while (_waitingCommandExecuting)
                 await UniTask.Yield();
 
             if (CheckSideWin())
             {
-                _waitTurnChange = false;
+                _startingNewTurn = false;
                 return;
             }
 
             StartNewTurnClientRpc();
-            _waitTurnChange = false;
+            _startingNewTurn = false;
         }
 
         private void AllUnitsToIdleState()
@@ -224,6 +227,31 @@ namespace _Main.Scripts.Match
                 UnitRegistry.Instance.TryGetUnit(unitId, out var unit);
                 unit.ToIdleState();
             }
+        }
+
+        private bool CheckSideAvailableActions()
+        {
+            if (!MatchModel.MoveAvailable && !MatchModel.AttackAvailable)
+                return false;
+
+            PlayerSide oppositeSide = MatchModel.CurrentSide == PlayerSide.Side1 ? PlayerSide.Side2 : PlayerSide.Side1;
+            bool sideCanAttackAnyUnit = false;
+            foreach (var unitId in _matchUnitsModel.GetAllUnitsBySide(MatchModel.CurrentSide))
+            {
+                if (!UnitRegistry.Instance.TryGetUnit(unitId, out BaseUnit unit))
+                    continue;
+
+                if (!unit.CanAttackReachAnyUnitSide(oppositeSide)) 
+                    continue;
+                
+                sideCanAttackAnyUnit = true;
+                break;
+            }
+
+            if (!MatchModel.MoveAvailable && MatchModel.AttackAvailable && !sideCanAttackAnyUnit)
+                return false;
+                
+            return true;
         }
 
         private bool CheckSideWin()

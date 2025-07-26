@@ -868,3 +868,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _unitManipulator: {fileID: 0}
   _roundTime: 60
+  _maxRoundCount: 15

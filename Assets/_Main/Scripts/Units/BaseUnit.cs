@@ -97,6 +97,20 @@ namespace _Main.Scripts.Units
             return false;
         }
 
+        public bool CanAttackReachAnyUnitSide(PlayerSide targetSide)
+        {
+            Collider[] colliders = Physics.OverlapSphere(transform.position, _attackRange, _attackLayerMask);
+
+            foreach (var collider in colliders)
+            {
+                BaseUnit unit = collider.GetComponentInParent<BaseUnit>();
+                if (unit != null && unit.PlayerSide == targetSide)
+                    return true;
+            }
+
+            return false;
+        }
+
         public void ClearVisualPath()
         {
             _unitPathPredictor.ClearPath();
