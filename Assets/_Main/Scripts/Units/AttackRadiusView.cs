@@ -39,6 +39,9 @@ namespace _Main.Scripts.Units
         {
             _active = active;
             transform.gameObject.SetActive(active);
+            
+            if (!active)
+                CheckZone(false);
         }
 
         private void CheckZone(bool active)

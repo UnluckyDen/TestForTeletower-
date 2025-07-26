@@ -144,6 +144,8 @@ namespace _Main.Scripts.Units
 
             Selected = false;
             _attackRadiusView.SetZoneActive(false);
+            _attackRadiusView.transform.localPosition = Vector3.zero;
+            
             _selectedGameObject.SetActive(false);
             ClearVisualPath();
         }
