@@ -271,9 +271,7 @@ namespace _Main.Scripts.Match
                 return true;
             }
 
-            if (MatchModel.RoundNumber == MatchModel.MaxRoundNumber 
-                && MatchModel.ContainsActedSide(PlayerSide.Side1)
-                && MatchModel.ContainsActedSide(PlayerSide.Side2)
+            if (MatchModel.RoundNumber >= MatchModel.MaxRoundNumber 
                 && side1 == side2)
             {
                 foreach (var baseUnit in UnitRegistry.Instance.GetAllUnits())
